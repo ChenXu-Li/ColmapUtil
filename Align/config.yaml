@@ -1,0 +1,59 @@
+# ============================================================
+# Robust point cloud registration config
+# ============================================================
+
+input:
+  pointcloud_A: "/root/autodl-tmp/data/colmap_STAGE1_4x/RoofTop/fused.ply"
+  pointcloud_B: "/root/autodl-tmp/data/MobilePhone/RoofTop/colmap/fused.ply"
+  # pointcloud_B: "/root/autodl-tmp/code/ColmapUtil/Align/output/BBB.ply"
+
+output:
+  aligned_B: "output/RoofTop_hand.ply"
+
+# ------------------------------------------------------------
+# Init
+# ------------------------------------------------------------
+
+init:
+  use_init_transform: false
+  transform_file: "output/init_transform.txt"
+
+# ------------------------------------------------------------
+# Multi-scale base voxel
+# ------------------------------------------------------------
+
+voxel_size: 0.8      # 适合 0-100m 场景
+
+# ------------------------------------------------------------
+# Robust partial overlap
+# ------------------------------------------------------------
+
+robust:
+  enable: true
+  trim_ratio: 0.6   # 保留 85% 最小残差（不是 15%）
+
+# ------------------------------------------------------------
+# ICP
+# ------------------------------------------------------------
+
+icp:
+  method: "gicp"     # gicp 对 partial overlap 更稳
+  max_correspondence_factor: 4.0
+  max_iteration: 120
+
+# ------------------------------------------------------------
+# Normals
+# ------------------------------------------------------------
+
+normal_radius_factor: 2.5
+
+# ------------------------------------------------------------
+# Preview (for interactive_coarse_align.py)
+# ------------------------------------------------------------
+
+preview_downsample: false  # 是否对预览点云进行下采样（默认关闭，使用全分辨率）
+
+# ------------------------------------------------------------
+
+scale_estimation: false
+visualize: false

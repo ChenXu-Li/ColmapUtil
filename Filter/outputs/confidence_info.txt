@@ -1,0 +1,9 @@
+pointcloud_path=/root/autodl-tmp/code/ColmapUtil/Filter/outputs/pointcloud_downsampled.ply
+original_pointcloud_path=/root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/fused.ply
+confidence_file=/root/autodl-tmp/code/ColmapUtil/Filter/outputs/geometry_confidence.npy
+num_points=81044
+confidence_min=0.050000
+confidence_max=0.990810
+confidence_mean=0.359975
+voxel_downsample_enabled=True
+voxel_size=0.02

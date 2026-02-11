@@ -1,0 +1,20 @@
+# COLMAP工具集依赖
+# 注意: pycolmap需要3.x版本，支持Reconstruction API
+# 如果使用0.0.1版本，某些功能可能不兼容
+
+# 核心依赖
+pycolmap>=3.8.0  # 需要3.8+版本，支持Reconstruction API和Rig配置
+numpy>=1.20.0
+opencv-python>=4.5.0
+Pillow>=8.0.0
+scipy>=1.7.0
+tqdm>=4.60.0
+plyfile>=0.7.4
+pyyaml>=5.4.0
+
+# 可视化工具依赖（可选）
+viser>=0.1.0
+
+# 训练工具依赖（可选，根据实际需求添加）
+# torch>=1.10.0
+# torchvision>=0.11.0

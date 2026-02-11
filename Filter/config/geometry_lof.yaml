@@ -1,0 +1,78 @@
+# =========================
+# Input / Output
+# =========================
+# 输入点云路径（可以是绝对路径，或相对于 filter 项目根目录的相对路径）
+input:
+  pointcloud_path: /root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/fused.ply
+
+# 输出目录（相对于 filter 项目根目录，所有输出将限制在项目目录内）
+output:
+  output_dir: outputs
+  filtered_ply: geometry_filtered.ply
+  save_confidence_npy: true
+
+# 日志和可视化文件目录（相对于 filter 项目根目录）
+logs:
+  log_dir: logs
+  save_colored_ply: true
+
+# =========================
+# Preprocessing
+# =========================
+preprocess:
+  voxel_downsample:
+    enable: true
+    voxel_size: 0.02
+
+# =========================
+# LOF parameters
+# =========================
+lof:
+  n_neighbors: 30
+  metric: euclidean
+
+# =========================
+# Confidence mapping
+# =========================
+confidence:
+  type: exponential
+
+  exponential:
+    alpha: 2.0
+
+  min_weight: 0.05
+
+# =========================
+# Geometry parameters (NEW)
+# =========================
+geometry:
+  k_neighbors: 30          # 用于 PCA 的邻域点数
+
+  plane_distance:
+    enable: true
+    beta: 20.0             # 点到面距离的衰减系数（越大，对距离越敏感）
+
+  structure:
+    enable: true
+    gamma: 10.0            # 结构指标（surface variation）的衰减系数（越大，对散乱度越敏感）
+
+# =========================
+# Fusion parameters (NEW)
+# =========================
+fusion:
+  alpha_lof: 1.0           # LOF 权重指数
+  alpha_plane: 1.0          # 平面距离权重指数
+  alpha_structure: 1.0      # 结构指标权重指数
+
+# =========================
+# Optional weak filtering
+# =========================
+filter:
+  enable: true
+  min_confidence: 0.2
+
+# =========================
+# Visualization
+# =========================
+visualization:
+  colormap: viridis

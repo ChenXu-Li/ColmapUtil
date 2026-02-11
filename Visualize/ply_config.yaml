@@ -1,0 +1,22 @@
+# PLY 点云可视化专用配置（对应 visualize_ply.sh）
+#
+# 无命令行参数时，visualize_ply.sh 会从这里读取默认值。
+
+# 默认要显示的 PLY 点云列表
+#对齐用的点云
+# files:
+#   - "/root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/fused.ply"
+#   - "/root/autodl-tmp/data/MobilePhone/BridgeB/colmap/fused.ply"
+#   - "/root/autodl-tmp/code/ColmapUtil/Align/output/BBB.ply"
+#   - "/root/autodl-tmp/code/ColmapUtil/Align/output/B_aligned.ply"
+#过滤用的点云
+files:
+  - "/root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/fused.ply"
+  - "/root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/handdelete.ply"
+  - "/root/autodl-tmp/data/colmap_STAGE1/BridgeB/handdelete.ply"
+# viser 端口（等价于脚本中的 -p / --port）
+port: 8080
+
+# 点大小（等价于脚本中的 -s / --point-size）
+point_size: 0.005
+

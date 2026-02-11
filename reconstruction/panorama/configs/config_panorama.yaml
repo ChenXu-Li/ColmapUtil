@@ -1,0 +1,125 @@
+# 全景图重建配置
+# 适用于360°全景图像的重建，使用虚拟相机组（Rig）
+
+# 数据路径
+paths:
+  input_panoramas: ""  # 输入全景图目录
+  output_path: ""      # 输出路径
+  database_path: ""    # 数据库路径（自动生成）
+
+# 全景图渲染配置
+panorama_rendering:
+  # 渲染类型: overlapping, non-overlapping
+  render_type: "overlapping"
+  
+  # Overlapping配置（重叠渲染）
+  overlapping:
+    num_steps_yaw: 12      # 水平方向虚拟相机数量
+    pitches_deg: [-35.0, 0.0, 35.0]  # 俯仰角（度）
+    hfov_deg: 90.0         # 水平视场角（度）
+    vfov_deg: 90.0         # 垂直视场角（度）
+  
+  # Non-overlapping配置（非重叠渲染，类似cubemap）
+  non_overlapping:
+    num_steps_yaw: 4
+    pitches_deg: [0.0]
+    hfov_deg: 90.0
+    vfov_deg: 90.0
+
+# 特征提取配置
+feature_extraction:
+  use_gpu: true
+  gpu_index: "0"
+  num_threads: 4
+  max_image_size: 3200
+  max_num_features: 8192
+
+# 特征匹配配置（全景图特有）
+feature_matching:
+  use_gpu: true
+  gpu_index: "0"
+  num_threads: 4
+  # 匹配器类型: exhaustive, sequential, spatial, vocabtree
+  matcher_type: "sequential"
+  # 启用Rig验证（全景图特有）
+  rig_verification: true
+  # 跳过同一frame内的图像对（因为mask已处理）
+  skip_image_pairs_in_same_frame: true
+  # Sequential匹配器配置
+  sequential:
+    loop_detection: true
+
+# 稀疏重建配置（全景图特有）
+sparse_reconstruction:
+  # 放宽初始化约束（全景图需要）
+  init_min_num_inliers: 30
+  init_max_error: 12.0
+  init_min_tri_angle: 4.0
+  init_max_reg_trials: 10
+  
+  abs_pose_min_num_inliers: 10
+  abs_pose_min_inlier_ratio: 0.10
+  abs_pose_max_error: 20.0
+  
+  filter_min_tri_angle: 0.5
+  filter_max_reproj_error: 8.0
+  
+  # Bundle Adjustment配置（不优化rig参数）
+  ba_refine_sensor_from_rig: false
+  ba_refine_focal_length: false
+  ba_refine_principal_point: false
+  ba_refine_extra_params: false
+  
+  min_num_matches: 5
+  min_model_size: 3
+  init_num_trials: 500
+
+# 稠密重建配置（与普通图像相同，但使用去畸变后的虚拟相机图像）
+dense_reconstruction:
+  # 图像去畸变
+  undistortion:
+    max_image_size: 3200
+  
+  # Patch Match配置
+  patch_match:
+    quality: "medium"
+    max_image_size: 3200
+    window_radius: 7
+    window_step: 1
+    num_iterations: 5
+    geom_consistency: true
+    filter_min_ncc: 0.1
+    filter_min_num_consistent: 2
+    filter_min_triangulation_angle: 1.0
+    gpu_index: "0"
+  
+  # 点云融合配置
+  stereo_fusion:
+    max_image_size: 3200
+    min_num_pixels: 5
+    max_num_pixels: 10000
+    max_traversal_depth: 100
+    max_reproj_error: 2.0
+    max_depth_error: 0.01
+    max_normal_error: 0.1
+    check_num_images: 50
+    num_threads: 8
+
+# 输出格式（全景图特有）
+output:
+  # 稀疏重建输出（包含Rig配置）
+  sparse_format: "binary"
+  # 是否导出Rig配置
+  export_rig_config: true
+  # 稠密重建输出
+  dense_format: "ply"
+  # 是否导出虚拟相机图像
+  export_virtual_images: false  # 通常不需要，但可用于调试
+
+# 环境变量
+environment:
+  OMP_NUM_THREADS: 4
+  MKL_NUM_THREADS: 4
+  OPENBLAS_NUM_THREADS: 4
+  NUMEXPR_NUM_THREADS: 4
+  VECLIB_MAXIMUM_THREADS: 4

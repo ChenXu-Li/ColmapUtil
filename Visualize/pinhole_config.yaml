@@ -1,0 +1,28 @@
+# Pinhole 重建结果可视化专用配置（对应 visualize_pinhole.sh）
+#
+# 无命令行参数时，visualize_pinhole.sh 会从这里读取默认值。
+
+# COLMAP 工作空间路径（必须存在 sparse/0 目录）
+workspace_path: "/root/autodl-tmp/data/MobilePhone/BridgeB/colmap"
+
+# 可选：显式指定稀疏结果路径（不填则使用 workspace_path/sparse/0）
+# sparse_path: "/root/autodl-tmp/data/MobilePhone/BridgeB/colmap/sparse/0"
+
+# 可选：显式指定稠密点云路径（不填则在 workspace_path 下自动搜索 fused.ply）
+# dense_ply: "/root/autodl-tmp/data/MobilePhone/BridgeB/colmap/fused.ply"
+
+# viser 端口（等价于脚本中的 -p / --port）
+port: 8080
+
+# 稀疏 / 稠密点云点大小
+sparse_point_size: 0.01
+dense_point_size: 0.005
+
+# 相机 frustum 缩放
+camera_scale: 0.05
+
+# 是否隐藏各类元素（等价于脚本中的 --hide-xxx 开关）
+hide_sparse_points: false
+hide_cameras: false
+hide_dense_points: false
+

@@ -1,0 +1,85 @@
+# ExtractFrames 配置文件
+# 视频帧提取工具配置
+
+# =========================
+# 路径配置
+# =========================
+paths:
+  # 输入视频文件或文件夹路径（可以是绝对路径或相对路径）
+  # 如果命令行未指定，将从配置文件读取
+  input: "/root/autodl-tmp/data/MobilePhone/Road/Videos/"
+  
+  # 输出图像文件夹路径（可以是绝对路径或相对路径）
+  # 如果命令行未指定，将从配置文件读取
+  output: "/root/autodl-tmp/data/MobilePhone/Road/images"
+  
+  # 要提取的帧数（可选，如果命令行未指定则使用此值）
+  # - 单个视频：提取的帧数
+  # - 文件夹：总帧数（如果使用 distribute_mode: "distribute"）或每视频帧数（默认）
+  num_frames: 600
+
+# =========================
+# 输出图像配置
+# =========================
+output:
+  # 最大分辨率设置
+  # 如果提取的帧分辨率超过此值，将自动缩放
+  # 设置为 null 或 0 表示不限制分辨率
+  max_resolution:
+    width: 1920   # 最大宽度（像素），null 表示不限制
+    height: 1080  # 最大高度（像素），null 表示不限制
+  
+  # 或者使用单一的最大边长（宽度和高度中的较大值）
+  # 如果设置了 max_edge，将优先使用 max_edge，忽略 width 和 height
+  max_edge: 640  # 最大边长（像素），null 表示不限制
+  
+  # 缩放模式
+  # "fit": 保持宽高比，缩放到适合最大分辨率（默认）
+  # "crop": 保持宽高比，裁剪到最大分辨率
+  # "stretch": 不保持宽高比，拉伸到最大分辨率
+  resize_mode: "fit"
+  
+  # 图像格式
+  format: "jpg"  # jpg, png
+  
+  # JPEG 质量（仅当 format 为 jpg 时有效）
+  jpeg_quality: 95  # 1-100，值越大质量越好但文件越大
+
+# =========================
+# 提取配置
+# =========================
+extraction:
+  # 前缀模式
+  # "video_name": 使用视频文件名作为前缀（默认）
+  # "sequential": 使用序号作为前缀
+  # "none": 不使用前缀
+  prefix_mode: "sequential"
+  
+  # 支持的视频扩展名
+  video_extensions:
+    - "mp4"
+    - "avi"
+    - "mov"
+    - "mkv"
+    - "flv"
+    - "wmv"
+    - "m4v"
+  
+  # 帧范围设置（每个视频）
+  start_frame: 0        # 起始帧，0 表示从视频开头开始
+  end_frame: null       # 结束帧，null 表示到视频末尾
+  
+  # 批量处理模式（仅对文件夹模式有效）
+  # "distribute": 按视频时长比例分配总帧数
+  # "equal": 每个视频提取相同数量的帧（默认）
+  distribute_mode: "distribute"  # distribute 或 equal
+
+# =========================
+# 日志配置
+# =========================
+logging:
+  # 日志级别: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  
+  # 是否显示缩放信息
+  show_resize_info: true

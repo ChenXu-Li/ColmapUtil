@@ -1,0 +1,53 @@
+# 训练工具配置
+# 用于基于COLMAP重建结果进行训练（如NeRF、Gaussian Splatting等）
+
+# 数据路径
+paths:
+  colmap_output: ""      # COLMAP重建输出目录
+  training_output: ""    # 训练输出目录
+  dataset_name: ""       # 数据集名称
+
+# 数据转换配置
+conversion:
+  # 是否将稠密点云转换为COLMAP格式
+  convert_dense_to_colmap: false
+  # 稠密点云路径（如果启用转换）
+  dense_ply_path: ""
+  # 是否备份原始points3D
+  backup_original: true
+
+# 训练数据格式
+output_format:
+  # 输出格式类型: nerfstudio, gaussian_splatting, instant_ngp, custom
+  format: "gaussian_splatting"
+  
+  # NeRF Studio格式
+  nerfstudio:
+    images_per_subset: 8
+    train_images_per_subset: 4
+    eval_images_per_subset: 2
+  
+  # Gaussian Splatting格式
+  gaussian_splatting:
+    # 是否使用稠密点云初始化
+    use_dense_init: false
+    # 点云下采样比例
+    point_downsample_ratio: 1.0
+
+# 训练参数（示例，根据实际训练框架调整）
+training:
+  # 是否启用GPU
+  use_gpu: true
+  gpu_index: 0
+  # 批大小
+  batch_size: 1
+  # 学习率
+  learning_rate: 0.01
+  # 迭代次数
+  num_iterations: 30000
+
+# 环境变量
+environment:
+  OMP_NUM_THREADS: 4
+  MKL_NUM_THREADS: 4
+  OPENBLAS_NUM_THREADS: 4

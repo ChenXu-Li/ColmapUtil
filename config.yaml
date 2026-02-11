@@ -1,0 +1,24 @@
+# COLMAP工具集 - 主配置文件（已废弃）
+# 
+# 注意: 本项目已改为模块化配置，每个模块有独立的配置文件：
+# - 普通图像重建: reconstruction/pinhole/configs/config_pinhole.yaml
+# - 全景图重建: reconstruction/panorama/configs/config_panorama.yaml
+# - 可视化: visualization/configs/config_viz.yaml
+# - 训练: training/configs/config_training.yaml
+#
+# 请使用各模块的独立配置文件和启动脚本。
+
+# 以下为兼容性保留的默认路径（仅供参考）
+paths:
+  # 默认输入数据根目录（仅供参考）
+  input_base: "/root/autodl-tmp/data/STAGE1_4x"
+  # 默认COLMAP输出根目录（仅供参考）
+  colmap_base: "/root/autodl-tmp/data/colmap_STAGE1_4x"
+
+# 环境变量配置（各模块脚本会自动设置）
+environment:
+  OMP_NUM_THREADS: 4
+  MKL_NUM_THREADS: 4
+  OPENBLAS_NUM_THREADS: 4
+  NUMEXPR_NUM_THREADS: 4
+  VECLIB_MAXIMUM_THREADS: 4
