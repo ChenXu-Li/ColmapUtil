@@ -1,0 +1,84 @@
+# ============================================================
+# 图片下采样配置文件
+# Image Downsampling Configuration
+# ============================================================
+
+# 输入输出路径
+paths:
+  input_dir: "/root/autodl-tmp/data/360Roam/innovation32/backgrounds"
+  output_dir: "/root/autodl-tmp/data/360Roam_4x/innovation32/backgrounds"
+
+# 下采样参数
+downsampling:
+  # 下采样因子（2 表示缩小为原来的 1/2，4 表示缩小为原来的 1/4）
+  factor: 4
+  
+  # 或者指定目标尺寸（优先级高于 factor）
+  # 如果设置了 target_width 或 target_height，将忽略 factor
+  # target_width: 1920
+  # target_height: 1080
+  
+  # 保持宽高比（当指定 target_width 或 target_height 时生效）
+  keep_aspect_ratio: true
+
+# 图像处理参数
+processing:
+  # 插值方法: NEAREST, LINEAR, AREA, CUBIC, LANCZOS4
+  # 推荐: AREA（缩小时效果好），LANCZOS4（高质量但较慢）
+  interpolation: "AREA"
+  
+  # 输出图片质量 (JPEG: 0-100, PNG: 0-9 压缩级别)
+  jpeg_quality: 95
+  png_compression: 3
+  
+  # 输出格式: auto（保持原格式）, jpg, png, webp
+  output_format: "auto"
+
+# 文件过滤
+filter:
+  # 支持的图片扩展名
+  extensions:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".bmp"
+    - ".tiff"
+    - ".webp"
+  
+  # 是否递归处理子目录
+  recursive: false
+  
+  # 排除的文件名模式（正则表达式）
+  # exclude_patterns:
+  #   - "^\\."  # 排除隐藏文件
+  #   - "_thumb$"  # 排除缩略图
+
+# 并行处理
+parallel:
+  # 工作线程数（0 表示使用 CPU 核心数）
+  num_workers: 0
+  
+  # 批处理大小
+  batch_size: 10
+
+# 输出设置
+output:
+  # 是否覆盖已存在的文件
+  overwrite: true
+  
+  # 是否保持目录结构（recursive=true 时有效）
+  preserve_structure: true
+  
+  # 文件名后缀（可选，如 "_2x"）
+  # suffix: "_downsampled"
+
+# 日志设置
+logging:
+  # 日志级别: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  
+  # 是否显示进度条
+  show_progress: true
+  
+  # 是否显示处理时间统计
+  show_stats: true

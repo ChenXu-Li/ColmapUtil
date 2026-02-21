@@ -1,0 +1,42 @@
+# ============================================================
+# Viser Rig PLY Optimized Depth Visualization Config
+# ============================================================
+
+# ------------------------------------------------------------
+# Paths
+# ------------------------------------------------------------
+
+paths:
+  scene: "BridgeB"  # 场景名称（如 BridgeB, RoofTop, BridgeA 等）
+  colmap_dir: "/root/autodl-tmp/data/colmap_STAGE1_4x"  # colmap_STAGE数据集根目录
+  stage_dir: "/root/autodl-tmp/data/STAGE1_4x"  # STAGE数据集根目录（用于加载原始点云）
+  optimized_dir: "/root/autodl-tmp/data/STAGE1_4x/BridgeB/elastic_refined"  # 优化后的点云目录（如果为null，将使用 {stage_dir}/{scene}/pointsclouds_single_opt）
+
+# ------------------------------------------------------------
+# Visualization Settings
+# ------------------------------------------------------------
+
+visualization:
+  load_original: true  # 是否同时加载原始点云（在STAGE目录下的pointclouds文件夹）
+  hide_points: false  # 隐藏COLMAP稀疏点云（默认显示）
+  hide_cameras: false  # 隐藏相机位置（默认显示）
+  hide_ply: false  # 隐藏点云文件（默认显示）
+  camera_name: "pano_camera12"  # 点云所在的虚拟相机名称（用于计算cam_from_rig变换）
+  no_transform: false  # 不对优化后的点云应用坐标变换（默认：应用变换，从camera坐标系转换到世界坐标系）
+
+# ------------------------------------------------------------
+# Server Settings
+# ------------------------------------------------------------
+
+server:
+  port: 8081  # Viser服务器端口（默认8081，避免与原始脚本冲突）
+
+# ------------------------------------------------------------
+# Display Settings
+# ------------------------------------------------------------
+
+display:
+  axis_length: 0.3  # 坐标轴长度（默认0.3米）
+  axis_width: 3.0  # 坐标轴线条宽度（默认3.0）
+  camera_scale: 0.05  # 相机frustum的缩放比例（默认0.05）
+  point_size: 0.005  # 点云点的大小（默认0.005）

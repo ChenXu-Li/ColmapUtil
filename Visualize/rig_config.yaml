@@ -1,0 +1,30 @@
+# Rig 相机组可视化专用配置（对应 watch_rig.sh）
+#
+# 无命令行参数时，watch_rig.sh 会从这里读取默认值。
+
+# 场景名称（如 BridgeB, RoofTop, BridgeA 等）
+scene: "bar4"
+
+# colmap_STAGE数据集根目录
+colmap_dir: "/root/autodl-tmp/data/colmap_360Roam"
+
+# viser 端口（等价于脚本中的 -p / --port）
+port: 8080
+
+# 坐标轴长度（米）
+axis_length: 0.3
+
+# 坐标轴线条宽度
+axis_width: 3.0
+
+# 相机 frustum 缩放
+camera_scale: 0.05
+
+# 稠密点云配置（可选）
+# dense_ply: "/path/to/fused.ply"  # 如果指定，则使用该路径；否则自动查找
+# dense_point_size: 0.005  # 稠密点云点的大小
+
+# 是否隐藏各类元素（等价于脚本中的 --hide-xxx 开关）
+hide_points: false
+hide_cameras: false
+# hide_dense_points: false

@@ -3,8 +3,8 @@
 
 # 数据路径
 paths:
-  input_panoramas: ""  # 输入全景图目录
-  output_path: ""      # 输出路径
+  input_panoramas: "/root/autodl-tmp/data/360Roam/bar4"  # 输入全景图目录
+  output_path: "/root/autodl-tmp/data/colmap_360Roam/bar4"      # 输出路径
   database_path: ""    # 数据库路径（自动生成）
 
 # 全景图渲染配置
@@ -40,7 +40,7 @@ feature_matching:
   gpu_index: "0"
   num_threads: 4
   # 匹配器类型: exhaustive, sequential, spatial, vocabtree
-  matcher_type: "sequential"
+  matcher_type: "exhaustive"
   # 启用Rig验证（全景图特有）
   rig_verification: true
   # 跳过同一frame内的图像对（因为mask已处理）

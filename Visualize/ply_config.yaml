@@ -10,11 +10,15 @@
 #   - "/root/autodl-tmp/code/ColmapUtil/Align/output/BBB.ply"
 #   - "/root/autodl-tmp/code/ColmapUtil/Align/output/B_aligned.ply"
 #过滤用的点云
-files:
-  - "/root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/fused.ply"
-  - "/root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/handdelete.ply"
-  - "/root/autodl-tmp/data/colmap_STAGE1/BridgeB/handdelete.ply"
+# files:
+#   - "/root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/fused.ply"
+#   - "/root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB/handdelete.ply"
+#   - "/root/autodl-tmp/data/colmap_STAGE1/BridgeB/handdelete.ply"
 # viser 端口（等价于脚本中的 -p / --port）
+
+#合并后的点云
+files:
+  - "/root/autodl-tmp/code/ColmapUtil/CombinePLYS/output/merged.ply"
 port: 8080
 
 # 点大小（等价于脚本中的 -s / --point-size）

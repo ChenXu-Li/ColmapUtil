@@ -1,0 +1,24 @@
+# ============================================================
+# Combine Point Clouds Config
+# ============================================================
+
+# ------------------------------------------------------------
+# Paths
+# ------------------------------------------------------------
+
+paths:
+  scene: "BridgeB"  # 场景名称（如 BridgeB, RoofTop, BridgeA 等）
+  colmap_dir: "/root/autodl-tmp/data/colmap_STAGE1_4x"  # colmap_STAGE数据集根目录
+  input_dir: "/root/autodl-tmp/data/STAGE1_4x/BridgeB/elastic_refined"  # 输入点云目录（包含要合并的PLY文件）
+
+# ------------------------------------------------------------
+# Processing Settings
+# ------------------------------------------------------------
+
+processing:
+  output: "output/merged.ply"  # 输出合并后的PLY文件路径
+  camera_name: "pano_camera12"  # 点云所在的虚拟相机名称（用于计算cam_from_rig变换）
+  no_transform: false  # 不对点云应用坐标变换（默认：应用变换，从camera坐标系转换到世界坐标系）
+                       # 如果点云已经在世界坐标系中，设置为 true
+  voxel_size: 0.05  # 体素下采样大小（米），0表示不下采样，默认0.05m
+  generate_colmap_points3d: true  # 是否生成 COLMAP points3D 格式文件到 output 目录（points3D.bin）

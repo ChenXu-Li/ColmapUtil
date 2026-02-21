@@ -327,6 +327,7 @@ def run(args: argparse.Namespace) -> None:
     feature_opts.num_threads = 4  # 限制CPU线程数，避免OpenBLAS问题
     
     # 创建ImageReaderOptions
+    # 注意：camera_mode=PER_FOLDER 会自动确保同一文件夹下的所有图像使用同一个相机ID
     reader_opts = pycolmap.ImageReaderOptions()
     reader_opts.mask_path = str(mask_dir)
     
@@ -348,6 +349,46 @@ def run(args: argparse.Namespace) -> None:
 
     logging.info("Applying rig configuration...")
     with pycolmap.Database.open(database_path) as db:
+        # 在应用 rig 配置之前，检查并修复相机ID不一致的问题
+        # 对于每个 rig camera 的前缀，确保所有图像使用同一个相机ID
+        logging.info("Checking camera ID consistency for rig cameras...")
+        images = db.read_all_images()
+        prefix_to_camera_ids = {}
+        prefix_to_images = {}
+        
+        for image in images:
+            for rig_camera in rig_config.cameras:
+                if image.name.startswith(rig_camera.image_prefix):
+                    prefix = rig_camera.image_prefix
+                    if prefix not in prefix_to_camera_ids:
+                        prefix_to_camera_ids[prefix] = set()
+                        prefix_to_images[prefix] = []
+                    prefix_to_camera_ids[prefix].add(image.camera_id)
+                    prefix_to_images[prefix].append(image)
+                    break
+        
+        # 检查是否有不一致的相机ID
+        inconsistent_prefixes = []
+        for prefix, camera_ids in prefix_to_camera_ids.items():
+            if len(camera_ids) > 1:
+                inconsistent_prefixes.append((prefix, camera_ids))
+                logging.warning(
+                    f"Found inconsistent camera IDs for prefix '{prefix}': {camera_ids}. "
+                    f"Will unify them to use the first camera ID."
+                )
+        
+        # 统一相机ID：对于每个前缀，使用第一个遇到的相机ID
+        if inconsistent_prefixes:
+            for prefix, camera_ids in inconsistent_prefixes:
+                target_camera_id = min(camera_ids)  # 使用最小的相机ID
+                for image in prefix_to_images[prefix]:
+                    if image.camera_id != target_camera_id:
+                        logging.info(
+                            f"Updating image '{image.name}' camera_id from {image.camera_id} to {target_camera_id}"
+                        )
+                        image.camera_id = target_camera_id
+                        db.update_image(image)
+        
         pycolmap.apply_rig_config([rig_config], db)
         # 诊断信息
         num_images = db.num_images()
@@ -368,13 +409,22 @@ def run(args: argparse.Namespace) -> None:
     matching_options.rig_verification = True
     # The images within a frame do not have overlap due to the provided masks.
     matching_options.skip_image_pairs_in_same_frame = True
+    # 获取本地vocab tree路径（如果存在）
+    local_vocab_tree = Path.home() / ".cache" / "colmap" / "vocab_tree_faiss_flickr100K_words256K.bin"
+    vocab_tree_path = str(local_vocab_tree) if local_vocab_tree.exists() else None
+    if vocab_tree_path:
+        logging.info(f"Using local vocab tree: {vocab_tree_path}")
+    
     try:
         if args.matcher == "sequential":
+            # 配置sequential pairing options（直接设置vocab_tree_path）
+            seq_pairing_kwargs = {"loop_detection": True}
+            if vocab_tree_path:
+                seq_pairing_kwargs["vocab_tree_path"] = vocab_tree_path
+            
             pycolmap.match_sequential(
                 database_path,
-                pairing_options=pycolmap.SequentialPairingOptions(
-                    loop_detection=True
-                ),
+                pairing_options=pycolmap.SequentialPairingOptions(**seq_pairing_kwargs),
                 matching_options=matching_options,
             )
         elif args.matcher == "exhaustive":

@@ -153,7 +153,7 @@ fi
 
 # 检查Python脚本
 PYTHON_SCRIPT="$PROJECT_ROOT/scripts/reconstruction/pinhole_reconstruction.py"
-DENSE_SCRIPT="$PROJECT_ROOT/scripts/reconstruction/dense_reconstruction_cli.py"
+DENSE_SCRIPT="$SCRIPT_DIR/dense_reconstruction_cli.py"
 
 if [ "$DENSE_ONLY" = false ]; then
     if [ ! -f "$PYTHON_SCRIPT" ]; then
