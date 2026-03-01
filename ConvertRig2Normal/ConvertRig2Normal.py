@@ -8,13 +8,29 @@ COLMAP Rig格式转标准格式转换脚本
 2. 更新sparse重建中的图像路径
 3. 移除rigs和frames信息，生成标准COLMAP格式
 
+依赖要求：
+    - pycolmap >= 3.13 (必需，因为需要 Rig 和 Frame 类支持)
+    - pyyaml (用于配置文件支持)
+
 用法：
-    python ConvertRig2Normal.py <输入路径> <输出路径> [--include-points3d] [--overwrite]
+    方式1: 使用命令行参数
+        python ConvertRig2Normal.py <输入路径> <输出路径> [--include-points3d] [--overwrite]
+    
+    方式2: 使用配置文件（如果命令行无参数，则从配置文件加载）
+        python ConvertRig2Normal.py
+        python ConvertRig2Normal.py --config config.yaml
+    
+    方式3: 混合使用（命令行参数会覆盖配置文件中的对应项）
+        python ConvertRig2Normal.py --config config.yaml --overwrite
     
 示例：
+    # 命令行参数方式
     python ConvertRig2Normal.py /root/autodl-tmp/data/colmap_STAGE1_4x/BridgeB /root/autodl-tmp/results/normalcolmap/colmap_STAGE1_4x/BridgeB
-    python ConvertRig2Normal.py /path/to/rig_dataset /path/to/output_dataset
     python ConvertRig2Normal.py /path/to/rig_dataset /path/to/output_dataset --include-points3d
+    
+    # 配置文件方式（需要先创建 config.yaml）
+    python ConvertRig2Normal.py
+    python ConvertRig2Normal.py --config /path/to/config.yaml
 """
 
 import argparse
@@ -23,6 +39,42 @@ import sys
 from pathlib import Path
 from typing import Dict, Optional
 import pycolmap
+import yaml
+
+# 检查 pycolmap 版本
+def check_pycolmap_version():
+    """检查 pycolmap 版本是否符合要求"""
+    try:
+        version_str = getattr(pycolmap, '__version__', None)
+        if version_str is None:
+            print_error("无法检测 pycolmap 版本，请确保已正确安装 pycolmap >= 3.13")
+            sys.exit(1)
+        
+        # 解析版本号
+        version_parts = version_str.split('.')
+        major = int(version_parts[0])
+        minor = int(version_parts[1]) if len(version_parts) > 1 else 0
+        
+        if major < 3 or (major == 3 and minor < 13):
+            print_error(f"pycolmap 版本 {version_str} 不符合要求，需要 >= 3.13")
+            print_error("请安装 pycolmap >= 3.13: pip install pycolmap>=3.13")
+            sys.exit(1)
+        
+        # 检查是否有 Rig 和 Frame 类
+        if not hasattr(pycolmap, 'Rig') or not hasattr(pycolmap, 'Frame'):
+            print_error("当前 pycolmap 版本不支持 Rig 和 Frame 类")
+            print_error("请安装 pycolmap >= 3.13: pip install pycolmap>=3.13")
+            sys.exit(1)
+        
+        print_info(f"pycolmap 版本检查通过: {version_str}")
+        return True
+    except Exception as e:
+        print_error(f"检查 pycolmap 版本时出错: {e}")
+        print_error("请确保已安装 pycolmap >= 3.13: pip install pycolmap>=3.13")
+        sys.exit(1)
+
+# 在导入后立即检查版本
+check_pycolmap_version()
 
 
 def print_info(msg: str):
@@ -43,6 +95,47 @@ def print_warning(msg: str):
 def print_error(msg: str):
     """打印错误信息"""
     print(f"[ERROR] {msg}")
+
+
+def load_config(config_path: Optional[Path] = None) -> Dict:
+    """
+    加载配置文件
+    
+    Args:
+        config_path: 配置文件路径，如果为 None，尝试从默认位置加载
+    
+    Returns:
+        配置字典
+    """
+    default_config = {
+        "input_path": None,
+        "output_path": None,
+        "overwrite": False,
+        "include_points3d": False
+    }
+    
+    if config_path is None:
+        # 尝试从脚本目录查找 config.yaml
+        script_dir = Path(__file__).parent
+        config_path = script_dir / "config.yaml"
+    
+    if config_path and config_path.exists():
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                user_config = yaml.safe_load(f)
+                if user_config:
+                    # 合并配置
+                    for key, value in user_config.items():
+                        if key in default_config:
+                            default_config[key] = value
+                    print_info(f"已加载配置文件: {config_path}")
+        except Exception as e:
+            print_warning(f"无法加载配置文件 {config_path}: {e}，使用默认配置")
+    else:
+        if config_path:
+            print_warning(f"配置文件不存在: {config_path}，使用命令行参数或默认配置")
+    
+    return default_config
 
 
 def copy_images_flat(input_images_dir: Path, output_images_dir: Path) -> Dict[str, str]:
@@ -309,7 +402,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
+  # 使用命令行参数
   python ConvertRig2Normal.py /path/to/rig_dataset /path/to/output_dataset
+  
+  # 使用配置文件（如果命令行无参数，则从配置文件加载）
+  python ConvertRig2Normal.py --config config.yaml
+  
+  # 混合使用（命令行参数会覆盖配置文件中的对应项）
+  python ConvertRig2Normal.py --config config.yaml --overwrite
   
 输入目录结构:
   input/
@@ -342,31 +442,69 @@ def main():
     parser.add_argument(
         'input_path',
         type=str,
-        help='输入的rig格式COLMAP数据集路径'
+        nargs='?',
+        default=None,
+        help='输入的rig格式COLMAP数据集路径（如果未提供，将从配置文件加载）'
     )
     
     parser.add_argument(
         'output_path',
         type=str,
-        help='输出的标准格式COLMAP数据集路径'
+        nargs='?',
+        default=None,
+        help='输出的标准格式COLMAP数据集路径（如果未提供，将从配置文件加载）'
+    )
+    
+    parser.add_argument(
+        '--config',
+        type=str,
+        default=None,
+        help='配置文件路径（默认: ConvertRig2Normal/config.yaml）'
     )
     
     parser.add_argument(
         '--overwrite',
         action='store_true',
-        help='如果输出目录已存在，是否覆盖'
+        default=None,
+        help='如果输出目录已存在，是否覆盖（会覆盖配置文件中的设置）'
     )
     
     parser.add_argument(
         '--include-points3d',
         action='store_true',
-        help='是否包含3D点信息（points3D.bin），默认不包含，只保留cameras.bin和images.bin'
+        default=None,
+        help='是否包含3D点信息（points3D.bin），默认不包含，只保留cameras.bin和images.bin（会覆盖配置文件中的设置）'
     )
     
     args = parser.parse_args()
     
-    input_path = Path(args.input_path)
-    output_path = Path(args.output_path)
+    # 加载配置文件
+    config_path = Path(args.config) if args.config else None
+    config = load_config(config_path)
+    
+    # 优先使用命令行参数，如果未提供则使用配置文件中的值
+    input_path_str = args.input_path or config.get("input_path")
+    output_path_str = args.output_path or config.get("output_path")
+    
+    # 检查必需参数
+    if not input_path_str:
+        print_error("未提供输入路径！请通过命令行参数或配置文件指定 input_path")
+        print_error("示例: python ConvertRig2Normal.py <input_path> <output_path>")
+        print_error("或创建配置文件 config.yaml 并设置 input_path 和 output_path")
+        sys.exit(1)
+    
+    if not output_path_str:
+        print_error("未提供输出路径！请通过命令行参数或配置文件指定 output_path")
+        print_error("示例: python ConvertRig2Normal.py <input_path> <output_path>")
+        print_error("或创建配置文件 config.yaml 并设置 input_path 和 output_path")
+        sys.exit(1)
+    
+    # 布尔参数：命令行参数优先，如果未提供则使用配置文件中的值
+    overwrite = args.overwrite if args.overwrite is not None else config.get("overwrite", False)
+    include_points3d = args.include_points3d if args.include_points3d is not None else config.get("include_points3d", False)
+    
+    input_path = Path(input_path_str)
+    output_path = Path(output_path_str)
     
     # 检查输入路径
     if not input_path.exists():
@@ -386,7 +524,7 @@ def main():
     
     # 检查输出路径
     if output_path.exists():
-        if args.overwrite:
+        if overwrite:
             print_warning(f"输出路径已存在，将覆盖: {output_path}")
             shutil.rmtree(output_path)
         else:
@@ -415,14 +553,14 @@ def main():
     
     # 步骤2: 转换sparse重建
     print_info("\n步骤2: 转换sparse重建...")
-    convert_sparse_reconstruction(input_sparse_dir, output_sparse_dir, path_mapping, args.include_points3d)
+    convert_sparse_reconstruction(input_sparse_dir, output_sparse_dir, path_mapping, include_points3d)
     
     print_info("\n" + "=" * 60)
     print_success("转换完成！")
     print_info("=" * 60)
     print_info(f"输出目录: {output_path}")
     print_info(f"  - images/: {len(list(output_images_dir.glob('*.*')))} 张图像")
-    if args.include_points3d:
+    if include_points3d:
         print_info(f"  - sparse/: 包含 cameras.bin, images.bin, points3D.bin")
     else:
         print_info(f"  - sparse/: 包含 cameras.bin, images.bin")

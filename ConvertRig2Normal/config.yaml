@@ -1,0 +1,26 @@
+# ============================================================
+# COLMAP Rig格式转标准格式配置文件
+# ============================================================
+# 
+# 如果命令行未提供参数，脚本将从本配置文件加载参数
+# 命令行参数会覆盖配置文件中的对应项
+#
+# 用法:
+#   1. 仅使用配置文件: python ConvertRig2Normal.py
+#   2. 指定配置文件: python ConvertRig2Normal.py --config config.yaml
+#   3. 混合使用: python ConvertRig2Normal.py --config config.yaml --overwrite
+# ============================================================
+
+# 输入的rig格式COLMAP数据集路径
+input_path: "/root/autodl-tmp/data/colmap_rig/colmap_STAGE1_4x/RafflesPark"
+
+# 输出的标准格式COLMAP数据集路径
+output_path: "/root/autodl-tmp/data/colmap_normal/colmap_STAGE_4x/RafflesPark"
+
+# 如果输出目录已存在，是否覆盖（true/false）
+overwrite: false
+
+# 是否包含3D点信息（points3D.bin）
+# true: 包含 points3D.bin（完整重建）
+# false: 只包含 cameras.bin 和 images.bin（默认，更快）
+include_points3d: false
