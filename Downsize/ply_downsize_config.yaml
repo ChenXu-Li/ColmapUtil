@@ -1,0 +1,51 @@
+# PLY 文件体素化下采样配置文件
+
+# ==================== 输入输出配置 ====================
+# 输入PLY文件路径
+input_file: /root/autodl-tmp/results/rigcolmap/bar16_ply/merged_pointcloud.ply
+
+# 输出PLY文件路径
+output_file: /root/autodl-tmp/results/rigcolmap/bar16_ply/merged_pointcloud_downsampled.ply
+
+# ==================== 下采样配置 ====================
+# 体素大小（单位：与点云坐标系一致）
+# 设置为 0 或负数表示不进行体素化下采样
+# 体素化下采样会将点云空间划分为固定大小的体素网格，每个体素内只保留一个点
+# 这样可以减少点数，同时保持点云的几何结构
+voxel_size: 0.02
+
+# 体素化下采样方法
+# "open3d": 使用 Open3D 的 voxel_down_sample（推荐，保留每个体素内的第一个点）
+# "average": 使用平均值（每个体素内的点颜色取平均，位置取体素中心）
+voxel_downsample_method: "open3d"
+
+# 最大点数上限（maxpoints）
+# 如果下采样后的点数超过此值，会进行随机下采样以限制点数
+# 设置为 0 或负数表示不进行随机采样
+# 注意：如果同时设置了 voxel_size 和 maxpoints，先进行体素化下采样，再进行随机采样
+maxpoints: 300_0000
+
+# ==================== 点云过滤配置 ====================
+# 是否移除无效点（非有限值：NaN, Inf）
+# 如果点云中有 NaN/Inf，体素化下采样可能会失败或产生错误结果
+# 建议保持为 true
+remove_invalid_points: true
+
+# 是否移除重复点（距离阈值，单位与点云坐标系一致）
+# 设置为 0 或负数表示不移除重复点
+# 注意：体素化下采样（voxel_size）也会起到去重作用，但两者有区别：
+#   - 体素化下采样：基于固定大小的体素网格，每个体素内只保留一个点（空间降采样）
+#   - 去重：基于距离阈值，移除距离小于阈值的所有重复点
+# 如果设置了体素化下采样，通常不需要单独去重（除非阈值比体素大小更小）
+# 建议：如果 voxel_size > 0，可以设置 remove_duplicate_threshold: 0.0
+remove_duplicate_threshold: 0.0
+
+# 点云范围过滤（可选，None 表示不过滤）
+# 格式: [min_x, max_x, min_y, max_y, min_z, max_z]
+# 示例: [-10.0, 10.0, -10.0, 10.0, -5.0, 5.0]
+# 用于裁剪点云到指定区域
+bbox_filter: null
+
+# ==================== 处理选项 ====================
+# 是否显示处理进度
+show_progress: true
