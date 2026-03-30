@@ -277,5 +277,12 @@ fi
 echo "=========================================="
 echo ""
 
+# 若稀疏目录缺少 points3D.bin（及小写别名），启动前提示；不绘制稀疏点由 visualize_pinhole.py 处理
+RESOLVED_SPARSE="${SPARSE_PATH:-$WORKSPACE_PATH/sparse/0}"
+if [[ ! -f "$RESOLVED_SPARSE/points3D.bin" ]] && [[ ! -f "$RESOLVED_SPARSE/points3d.bin" ]]; then
+    echo "提示: 未找到 points3D.bin，将不绘制稀疏点云。"
+fi
+export WATCH_PINHOLE_SCRIPT=1
+
 # 执行可视化
 python "$PYTHON_SCRIPT" "${PYTHON_ARGS[@]}"

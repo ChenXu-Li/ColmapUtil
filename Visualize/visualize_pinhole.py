@@ -9,8 +9,13 @@ import viser
 import viser.transforms as viser_tf
 import pycolmap
 import argparse
+import atexit
+import os
+import shutil
 import socket
+import struct
 import sys
+import tempfile
 from pathlib import Path
 from plyfile import PlyData
 
@@ -92,6 +97,38 @@ def load_ply_xyzrgb(ply_path: Path):
         colors = (colors * 255).astype(np.uint8)
 
     return positions, colors
+
+
+def prepare_sparse_model_path(sparse_path: Path) -> tuple[Path, bool]:
+    """
+    pycolmap 需要目录中存在 points3D.bin。
+    若仅有小写 points3d.bin，在临时目录中链为 points3D.bin。
+    若均不存在：写入空 points3D.bin 以便加载，并返回 skip_sparse=True。
+    """
+    p3d = sparse_path / "points3D.bin"
+    p3d_lower = sparse_path / "points3d.bin"
+
+    if p3d.is_file():
+        return sparse_path, False
+
+    def _tmpdir_with_symlinks() -> Path:
+        tmp = Path(tempfile.mkdtemp(prefix="viz_sparse_"))
+        atexit.register(lambda p=tmp: shutil.rmtree(p, ignore_errors=True))
+        for f in sparse_path.iterdir():
+            if f.is_file() and f.name not in ("points3D.bin", "points3d.bin"):
+                os.symlink(f.resolve(), tmp / f.name)
+        return tmp
+
+    if p3d_lower.is_file():
+        tmp = _tmpdir_with_symlinks()
+        os.symlink(p3d_lower.resolve(), tmp / "points3D.bin")
+        return tmp, False
+
+    if not os.environ.get("WATCH_PINHOLE_SCRIPT"):
+        print("⚠️  未找到 points3D.bin，将不绘制稀疏点云。")
+    tmp = _tmpdir_with_symlinks()
+    (tmp / "points3D.bin").write_bytes(struct.pack("<Q", 0))
+    return tmp, True
 
 
 def main():
@@ -187,11 +224,13 @@ def main():
         print(f"❌ 稀疏重建结果不存在: {sparse_path}")
         sys.exit(1)
 
-    # 检查必要的稀疏文件
-    for file in ["cameras.bin", "images.bin", "points3D.bin"]:
+    for file in ["cameras.bin", "images.bin"]:
         if not (sparse_path / file).exists():
             print(f"❌ 稀疏重建文件不完整: 缺少 {file}")
             sys.exit(1)
+
+    sparse_path, skip_sparse_no_points3d = prepare_sparse_model_path(sparse_path)
+    hide_sparse = bool(args.hide_sparse_points or skip_sparse_no_points3d)
 
     print("=" * 60)
     print("Pinhole 模型重建结果可视化")
@@ -225,7 +264,7 @@ def main():
     server = viser.ViserServer(host="0.0.0.0", port=port)
 
     # 加载稀疏点云
-    if not args.hide_sparse_points:
+    if not hide_sparse:
         print("📊 加载COLMAP稀疏点云...")
         points = []
         colors = []
