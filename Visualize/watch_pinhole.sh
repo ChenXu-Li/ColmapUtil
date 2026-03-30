@@ -34,6 +34,7 @@ Pinhole 模型重建结果可视化脚本
   --hide-sparse-points 隐藏稀疏点云
   --hide-cameras       隐藏相机位置
   --hide-dense-points  隐藏稠密点云
+  --show-camera-ids    在相机锥体旁显示相机编号（image_id）
   --frustum-images     在相机锥体上贴合对应图片（可能较慢）
   --images-root PATH   图片根目录（默认: workspace_path/images）
   --frustum-image-max-size SIZE 贴合图片最大边长（默认: 256）
@@ -117,6 +118,10 @@ if bool(cfg.get("hide_cameras", False)):
 if bool(cfg.get("hide_dense_points", False)):
     args.append("--hide-dense-points")
 
+# 相机编号（frustum 旁文字标注）
+if bool(cfg.get("show_camera_ids", False)):
+    args.append("--show-camera-ids")
+
 # 相机锥体贴图（frustum-images）
 if bool(cfg.get("frustum_images", False)):
     args.append("--frustum-images")
@@ -164,6 +169,7 @@ CAMERA_SCALE=""
 HIDE_SPARSE_POINTS=""
 HIDE_CAMERAS=""
 HIDE_DENSE_POINTS=""
+SHOW_CAMERA_IDS=""
 FRUSTUM_IMAGES=""
 IMAGES_ROOT=""
 FRUSTUM_IMAGE_MAX_SIZE=""
@@ -206,6 +212,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --hide-dense-points)
             HIDE_DENSE_POINTS="--hide-dense-points"
+            shift
+            ;;
+        --show-camera-ids)
+            SHOW_CAMERA_IDS="--show-camera-ids"
             shift
             ;;
         --frustum-images)
@@ -309,6 +319,9 @@ fi
 
 if [ -n "$HIDE_DENSE_POINTS" ]; then
     PYTHON_ARGS+=("$HIDE_DENSE_POINTS")
+fi
+if [ -n "$SHOW_CAMERA_IDS" ]; then
+    PYTHON_ARGS+=("$SHOW_CAMERA_IDS")
 fi
 
 if [ -n "$FRUSTUM_IMAGES" ]; then

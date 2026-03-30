@@ -189,6 +189,11 @@ def main():
         help="隐藏相机位置"
     )
     parser.add_argument(
+        "--show-camera-ids",
+        action="store_true",
+        help="在相机锥体旁显示相机编号（image_id）"
+    )
+    parser.add_argument(
         "--hide_dense_points",
         action="store_true",
         help="隐藏稠密点云"
@@ -447,6 +452,18 @@ def main():
                     position=T_world_camera.translation(),
                     image=frustum_image,
                 )
+                if args.show_camera_ids:
+                    # 在相机中心附近放置 2D label，方便在视锥体上直接读出对应编号
+                    server.scene.add_label(
+                        name=f"cam_{image_id}_id",
+                        text=str(image_id),
+                        wxyz=T_world_camera.rotation().wxyz,
+                        position=T_world_camera.translation(),
+                        anchor="bottom-center",
+                        font_size_mode="screen",
+                        depth_test=False,
+                        visible=True,
+                    )
                 camera_count += 1
             except Exception as e:
                 print(f"⚠️  处理相机 {image_id} 时出错: {e}")

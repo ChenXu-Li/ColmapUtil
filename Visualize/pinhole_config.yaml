@@ -27,6 +27,9 @@ hide_sparse_points: false
 hide_cameras: false
 hide_dense_points: false
 
+# 是否在相机锥体旁显示相机编号（image_id）
+show_camera_ids: true
+
 # 是否在相机锥体上贴合对应图片（默认开启，可能较慢）
 frustum_images: true
 
