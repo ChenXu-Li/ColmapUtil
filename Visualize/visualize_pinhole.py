@@ -319,19 +319,23 @@ def main():
 
                 # 计算FOV
                 # 尝试从相机参数计算FOV，如果失败则使用默认值
-                fov = 50.0  # 默认FOV
+                # viser 的 add_camera_frustum() 约定:
+                #   fov: 垂直视场角 (radians)
+                #   aspect: width / height
+                fov = np.deg2rad(50.0)  # 默认FOV（弧度）
                 try:
                     # 获取相机模型（CameraModelId枚举）
                     camera_model = cam.model
 
                     # 尝试从参数计算FOV
-                    if len(cam.params) > 0:
-                        f = cam.params[0]
-                        if f > 0 and cam.width > 0:
-                            # 计算FOV: fov = 2 * arctan(width / (2 * f))
-                            fov = 2 * np.arctan(cam.width / (2 * f)) * 180 / np.pi
-                            # 限制FOV在合理范围内
-                            fov = np.clip(fov, 10.0, 170.0)
+                    if len(cam.params) > 1:
+                        # 对于 PINHOLE / OPENCV 这两类模型，cam.params 通常为 [fx, fy, cx, cy, ...]
+                        fy = cam.params[1]
+                        if fy > 0 and cam.height > 0:
+                            # 垂直FOV: fov = 2 * arctan(height / (2 * fy))
+                            fov = 2 * np.arctan(cam.height / (2 * fy))
+                            # 限制FOV在合理范围内（弧度）
+                            fov = np.clip(fov, np.deg2rad(10.0), np.deg2rad(170.0))
                 except Exception:
                     # 如果计算失败，使用默认FOV
                     pass
