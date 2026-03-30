@@ -18,6 +18,9 @@ import sys
 import tempfile
 from pathlib import Path
 from plyfile import PlyData
+from PIL import Image
+
+from functools import lru_cache
 
 
 def check_port(port):
@@ -191,6 +194,36 @@ def main():
         help="隐藏稠密点云"
     )
 
+    parser.add_argument(
+        "--frustum-images",
+        action="store_true",
+        help="在每个相机锥体上贴合对应图片（可能较慢、占用较多浏览器带宽）"
+    )
+    parser.add_argument(
+        "--images-root",
+        type=Path,
+        default=None,
+        help="图片根目录（用于解析 images.bin 里的 image.name；默认 workspace_path/images）"
+    )
+    parser.add_argument(
+        "--frustum-image-max-size",
+        type=int,
+        default=256,
+        help="贴合到锥体上的图片最大边长（会自动等比缩放）"
+    )
+    parser.add_argument(
+        "--frustum-image-every",
+        type=int,
+        default=1,
+        help="每隔多少张图显示一次（用于减少浏览器压力）"
+    )
+    parser.add_argument(
+        "--frustum-roll-deg",
+        type=float,
+        default=0.0,
+        help="绕相机光轴(+Z，指向方向)的固定滚转角（单位: 度）；用于修正可视化与数据的roll约定差异"
+    )
+
     args = parser.parse_args()
 
     workspace_path = Path(args.workspace_path)
@@ -254,6 +287,35 @@ def main():
         print(f"❌ 无法读取COLMAP重建结果: {e}")
         sys.exit(1)
 
+    images_root = args.images_root if args.images_root is not None else (workspace_path / "images")
+
+    @lru_cache(maxsize=128)
+    def _load_image_for_frustum(image_path: str) -> np.ndarray | None:
+        """
+        读取并缩放图片，返回 (H, W, 3) uint8 RGB。
+        返回 None 表示图片不存在或读取失败。
+        """
+        p = Path(image_path)
+        if not p.is_file():
+            return None
+
+        try:
+            with Image.open(str(p)) as im:
+                im = im.convert("RGB")
+                w, h = im.size
+                max_side = max(w, h)
+                if args.frustum_image_max_size > 0 and max_side > args.frustum_image_max_size:
+                    scale = args.frustum_image_max_size / float(max_side)
+                    nw = max(1, int(round(w * scale)))
+                    nh = max(1, int(round(h * scale)))
+                    im = im.resize((nw, nh), resample=Image.Resampling.LANCZOS)
+                arr = np.asarray(im, dtype=np.uint8)
+                if arr.ndim != 3 or arr.shape[2] != 3:
+                    return None
+                return arr
+        except Exception:
+            return None
+
     # 检查端口并启动服务器
     port = args.port
     if check_port(port):
@@ -301,6 +363,7 @@ def main():
     if not args.hide_cameras:
         print("📷 加载相机位置...")
         camera_count = 0
+        image_counter = 0
         for image_id, image in recon.images.items():
             try:
                 cam = recon.cameras[image.camera_id]
@@ -309,9 +372,34 @@ def main():
                 cam_from_world = image.cam_from_world() if callable(image.cam_from_world) else image.cam_from_world
                 R = cam_from_world.rotation.matrix()
                 t = cam_from_world.translation
+                # COLMAP/pycolmap 中 cam_from_world 满足: p_cam = R @ p_world + t
+                # 这里需要 world_from_cam (= T_wc) 以供 viser 使用。
+                R_wc_original = R.T  # world_from_cam rotation (before roll correction)
+                camera_center_w = -R_wc_original @ t
+
+                # 可能存在 roll 约定差异（例如 +Y down / +Y up 的差异）。
+                # 使用一个固定的绕相机本地 +Z 轴的旋转来修正。
+                frustum_roll_rad = np.deg2rad(args.frustum_roll_deg)
+                if abs(frustum_roll_rad) > 1e-12:
+                    c = float(np.cos(frustum_roll_rad))
+                    s = float(np.sin(frustum_roll_rad))
+                    # Rodrigues for local rotation about +Z (right-handed)
+                    Rz = np.array(
+                        [
+                            [c, -s, 0.0],
+                            [s,  c, 0.0],
+                            [0.0, 0.0, 1.0],
+                        ],
+                        dtype=np.float64,
+                    )
+                    # world_from_cam_new = world_from_cam_original @ Rz
+                    R_wc = R_wc_original @ Rz
+                else:
+                    R_wc = R_wc_original
+
                 T_wc = np.eye(4)
-                T_wc[:3, :3] = R.T
-                T_wc[:3, 3] = -R.T @ t
+                T_wc[:3, :3] = R_wc
+                T_wc[:3, 3] = camera_center_w
 
                 # Convert to viser SE3 format (3x4 matrix)
                 T_wc_3x4 = T_wc[:3, :]
@@ -340,6 +428,16 @@ def main():
                     # 如果计算失败，使用默认FOV
                     pass
 
+                # 可选：贴图到相机锥体上
+                frustum_image = None
+                if args.frustum_images and args.frustum_image_every > 0:
+                    if (image_counter % args.frustum_image_every) == 0:
+                        # COLMAP 的 image.name 在这里通常就是 basename（由转换脚本决定）
+                        img_path = images_root / image.name
+                        frustum_image = _load_image_for_frustum(str(img_path))
+
+                image_counter += 1
+
                 server.scene.add_camera_frustum(
                     name=f"cam_{image_id}",
                     fov=fov,
@@ -347,6 +445,7 @@ def main():
                     scale=args.camera_scale,
                     wxyz=T_world_camera.rotation().wxyz,
                     position=T_world_camera.translation(),
+                    image=frustum_image,
                 )
                 camera_count += 1
             except Exception as e:

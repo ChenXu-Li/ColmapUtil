@@ -34,6 +34,11 @@ Pinhole 模型重建结果可视化脚本
   --hide-sparse-points 隐藏稀疏点云
   --hide-cameras       隐藏相机位置
   --hide-dense-points  隐藏稠密点云
+  --frustum-images     在相机锥体上贴合对应图片（可能较慢）
+  --images-root PATH   图片根目录（默认: workspace_path/images）
+  --frustum-image-max-size SIZE 贴合图片最大边长（默认: 256）
+  --frustum-image-every N 每隔多少张图显示一次（默认: 1）
+  --frustum-roll-deg ANGLE 绕相机光轴(+Z)的固定滚转角（单位: 度；默认 0）
   -h, --help           显示此帮助信息
 
 示例:
@@ -112,6 +117,26 @@ if bool(cfg.get("hide_cameras", False)):
 if bool(cfg.get("hide_dense_points", False)):
     args.append("--hide-dense-points")
 
+# 相机锥体贴图（frustum-images）
+if bool(cfg.get("frustum_images", False)):
+    args.append("--frustum-images")
+
+images_root = cfg.get("images_root")
+if images_root:
+    args.extend(["--images-root", str(images_root)])
+
+frustum_image_max_size = cfg.get("frustum_image_max_size")
+if frustum_image_max_size is not None:
+    args.extend(["--frustum-image-max-size", str(frustum_image_max_size)])
+
+frustum_image_every = cfg.get("frustum_image_every")
+if frustum_image_every is not None:
+    args.extend(["--frustum-image-every", str(frustum_image_every)])
+
+frustum_roll_deg = cfg.get("frustum_roll_deg")
+if frustum_roll_deg is not None:
+    args.extend(["--frustum-roll-deg", str(frustum_roll_deg)])
+
 def shell_quote(s: str) -> str:
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
@@ -139,6 +164,11 @@ CAMERA_SCALE=""
 HIDE_SPARSE_POINTS=""
 HIDE_CAMERAS=""
 HIDE_DENSE_POINTS=""
+FRUSTUM_IMAGES=""
+IMAGES_ROOT=""
+FRUSTUM_IMAGE_MAX_SIZE=""
+FRUSTUM_IMAGE_EVERY=""
+FRUSTUM_ROLL_DEG=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -177,6 +207,26 @@ while [[ $# -gt 0 ]]; do
         --hide-dense-points)
             HIDE_DENSE_POINTS="--hide-dense-points"
             shift
+            ;;
+        --frustum-images)
+            FRUSTUM_IMAGES="--frustum-images"
+            shift
+            ;;
+        --images-root)
+            IMAGES_ROOT="$2"
+            shift 2
+            ;;
+        --frustum-image-max-size)
+            FRUSTUM_IMAGE_MAX_SIZE="$2"
+            shift 2
+            ;;
+        --frustum-image-every)
+            FRUSTUM_IMAGE_EVERY="$2"
+            shift 2
+            ;;
+        --frustum-roll-deg)
+            FRUSTUM_ROLL_DEG="$2"
+            shift 2
             ;;
         -h|--help)
             show_usage
@@ -259,6 +309,23 @@ fi
 
 if [ -n "$HIDE_DENSE_POINTS" ]; then
     PYTHON_ARGS+=("$HIDE_DENSE_POINTS")
+fi
+
+if [ -n "$FRUSTUM_IMAGES" ]; then
+    PYTHON_ARGS+=("$FRUSTUM_IMAGES")
+fi
+if [ -n "$IMAGES_ROOT" ]; then
+    PYTHON_ARGS+=("--images-root" "$IMAGES_ROOT")
+fi
+if [ -n "$FRUSTUM_IMAGE_MAX_SIZE" ]; then
+    PYTHON_ARGS+=("--frustum-image-max-size" "$FRUSTUM_IMAGE_MAX_SIZE")
+fi
+if [ -n "$FRUSTUM_IMAGE_EVERY" ]; then
+    PYTHON_ARGS+=("--frustum-image-every" "$FRUSTUM_IMAGE_EVERY")
+fi
+
+if [ -n "$FRUSTUM_ROLL_DEG" ]; then
+    PYTHON_ARGS+=("--frustum-roll-deg" "$FRUSTUM_ROLL_DEG")
 fi
 
 echo "=========================================="

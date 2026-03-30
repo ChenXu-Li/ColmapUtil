@@ -27,3 +27,20 @@ hide_sparse_points: false
 hide_cameras: false
 hide_dense_points: false
 
+# 是否在相机锥体上贴合对应图片（默认开启，可能较慢）
+frustum_images: true
+
+# （可选）图片根目录：默认使用 workspace_path/images
+# images_root: "/home/lcx/data/test_frame15/images"
+
+# 贴图缩放：贴合到锥体上的图片最大边长（像素）
+frustum_image_max_size: 256
+
+# 性能控制：每隔多少张图显示一次
+frustum_image_every: 1
+
+# 相机锥体/贴图方向的 roll 修正角（绕相机光轴 +Z，单位: 度）
+# 你观察到“应绕指向轴顺时针旋转 90°”；而可视化代码使用右手系正角旋转，
+# 因此这里默认取 +90 来匹配你当前数据的贴图朝向。
+frustum_roll_deg: 0
+
